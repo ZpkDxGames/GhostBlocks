@@ -1,0 +1,6 @@
+com\antondev\ghostblocks\managers\GhostBlockManager.class
+com\antondev\ghostblocks\data\GhostBlock.class
+com\antondev\ghostblocks\GhostBlocksPlugin.class
+com\antondev\ghostblocks\managers\GUIManager.class
+com\antondev\ghostblocks\listeners\GhostBlockListener.class
+com\antondev\ghostblocks\commands\GhostBlocksCommand.class

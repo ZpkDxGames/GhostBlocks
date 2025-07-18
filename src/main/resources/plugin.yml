@@ -1,0 +1,22 @@
+name: GhostBlocks
+version: "1.0"
+main: com.antondev.ghostblocks.GhostBlocksPlugin
+api-version: "1.20"
+authors: [ZpkDxGames]
+description: A plugin dedicated to creating and managing ghost blocks in Minecraft.
+website: https://github.com/ZpkDxGames/GhostBlocks
+
+commands:
+  ghostblocks:
+    description: Open the ghost blocks GUI
+    usage: /ghostblocks
+    aliases: [gb, ghost]
+    permission: ghostblocks.use
+
+permissions:
+  ghostblocks.use:
+    description: Allows using the ghost blocks plugin
+    default: true
+  ghostblocks.admin:
+    description: Allows administrative functions
+    default: op
