@@ -162,8 +162,10 @@ This project is released under the MIT License. See the LICENSE file for details
 
 ### v2.0.0
 - **GUI Enhancement**: GUI now stays open when selecting blocks for improved user experience
+- Initial GUI now has categories to choose
 - Players can now select multiple blocks without reopening the GUI
 - Other GUI interactions (remover tool, navigation) work as before
+- New `/ghostblocks count` command to tell you the amount of ghost blocks on the current world
 
 ### v1.0.0
 - Initial release
