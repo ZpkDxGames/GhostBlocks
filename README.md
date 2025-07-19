@@ -160,6 +160,11 @@ This project is released under the MIT License. See the LICENSE file for details
 
 ## Version History
 
+### v2.0.0
+- **GUI Enhancement**: GUI now stays open when selecting blocks for improved user experience
+- Players can now select multiple blocks without reopening the GUI
+- Other GUI interactions (remover tool, navigation) work as before
+
 ### v1.0.0
 - Initial release
 - Core ghost block functionality

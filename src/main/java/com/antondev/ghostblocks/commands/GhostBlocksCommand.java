@@ -44,9 +44,9 @@ public class GhostBlocksCommand implements CommandExecutor {
                         player.sendMessage(ChatColor.RED + "You don't have permission to reload the plugin!");
                         return true;
                     }
-                    plugin.getGhostBlockManager().saveGhostBlocks();
-                    plugin.getGhostBlockManager().loadGhostBlocks();
-                    player.sendMessage(ChatColor.GREEN + "GhostBlocks plugin reloaded!");
+                    player.sendMessage(ChatColor.YELLOW + "Reloading GhostBlocks plugin...");
+                    plugin.getGhostBlockManager().reload();
+                    player.sendMessage(ChatColor.GREEN + "GhostBlocks plugin reloaded successfully!");
                     return true;
                 case "cleanup":
                     if (!player.hasPermission("ghostblocks.admin")) {

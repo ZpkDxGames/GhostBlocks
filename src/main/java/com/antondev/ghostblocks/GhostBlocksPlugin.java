@@ -26,6 +26,9 @@ public final class GhostBlocksPlugin extends JavaPlugin {
         // Load ghost blocks from file
         ghostBlockManager.loadGhostBlocks();
 
+        // Debug: Print category info
+        guiManager.printCategoryInfo();
+
         getLogger().info("GhostBlocks plugin has been enabled!");
     }
 

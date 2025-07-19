@@ -10,7 +10,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -101,7 +103,7 @@ public class GhostBlockListener implements Listener {
             player.getInventory().addItem(ghostBlockItem);
             player.sendMessage(ChatColor.GREEN + "You received a Ghost " + 
                 formatMaterialName(clickedItem.getType()) + "!");
-            player.closeInventory();
+            // GUI stays open - removed player.closeInventory()
         }
     }
 
@@ -182,6 +184,23 @@ public class GhostBlockListener implements Listener {
             }
 
             event.setCancelled(true);
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // Clean up player data when they disconnect
+        plugin.getGUIManager().cleanupPlayerData(event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player) {
+            Player player = (Player) event.getPlayer();
+            // Only clean up if it's our GUI that was closed
+            if (plugin.getGUIManager().isGhostBlockGUI(event.getView().getTitle())) {
+                plugin.getGUIManager().cleanupPlayerData(player);
+            }
         }
     }
 }

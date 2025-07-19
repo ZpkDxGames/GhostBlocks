@@ -178,6 +178,39 @@ public class GhostBlockManager {
         return ghostBlocks.values();
     }
 
+    public void reload() {
+        plugin.getLogger().info("Reloading GhostBlocks plugin...");
+        
+        // Save current ghost blocks before clearing
+        saveGhostBlocks();
+        
+        // Clear all existing ghost blocks
+        clearAllGhostBlocks();
+        
+        // Reload plugin configuration
+        plugin.reloadConfig();
+        
+        // Load ghost blocks from file
+        loadGhostBlocks();
+        
+        plugin.getLogger().info("GhostBlocks plugin reloaded successfully!");
+    }
+
+    private void clearAllGhostBlocks() {
+        // Remove all falling block entities
+        for (GhostBlock ghostBlock : ghostBlocks.values()) {
+            if (ghostBlock.getFallingBlock() != null && ghostBlock.getFallingBlock().isValid()) {
+                ghostBlock.getFallingBlock().remove();
+            }
+        }
+        
+        // Clear all data structures
+        ghostBlocks.clear();
+        locationMap.clear();
+        
+        plugin.getLogger().info("Cleared all existing ghost blocks.");
+    }
+
     public void cleanupInvalidGhostBlocks() {
         List<UUID> toRemove = new ArrayList<>();
         for (GhostBlock ghostBlock : ghostBlocks.values()) {
