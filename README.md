@@ -118,7 +118,7 @@
 ### Requirements
 - Java 17 or higher
 - Maven 3.6+
-- Paper 1.20.4 API
+- Paper 1.20.6 API or higher
 
 ### Build Steps
 ```bash
@@ -169,3 +169,8 @@ This project is released under the MIT License. See the LICENSE file for details
 - Auto-save system
 - Admin commands
 - 200+ block types across all categories
+
+### v2.0.0
+- **GUI Enhancement**: GUI now stays open when selecting blocks for improved user experience
+- Players can now select multiple blocks without reopening the GUI
+- Other GUI interactions (remover tool, navigation) work as before
