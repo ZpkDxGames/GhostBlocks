@@ -1,7 +1,7 @@
 # GhostBlocks Plugin
 
-A Minecraft Paper 1.21.4/1.20.6 plugin that creates ghost blocks - blocks that are visible but hav2. **Can't remove ghost blocks**: Make sure you're using the Ghost Block Remover tool from the GUI
-3. **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed no hitbox, allowing players to walk through them.
+- A Minecraft plugin that creates ghost blocks - blocks that are visible but doesn't have a hitbox.
+- **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed
 
 ## Features
 
@@ -159,13 +159,6 @@ For issues, suggestions, or contributions:
 This project is released under the MIT License. See the LICENSE file for details.
 
 ## Version History
-
-### v2.0.0
-- **GUI Enhancement**: GUI now stays open when selecting blocks for improved user experience
-- Initial GUI now has categories to choose
-- Players can now select multiple blocks without reopening the GUI
-- Other GUI interactions (remover tool, navigation) work as before
-- New `/ghostblocks count` command to tell you the amount of ghost blocks on the current world
 
 ### v1.0.0
 - Initial release
