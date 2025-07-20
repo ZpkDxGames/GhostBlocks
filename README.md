@@ -1,7 +1,7 @@
 # GhostBlocks Plugin
 
-A Minecraft Paper 1.20.4 plugin that creates ghost blocks - blocks that are visible but hav2. **Can't remove ghost blocks**: Make sure you're using the Ghost Block Remover tool from the GUI
-3. **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed no hitbox, allowing players to walk through them.
+- A Minecraft plugin that creates ghost blocks - blocks that are visible but doesn't have a hitbox.
+- **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed
 
 ## Features
 
