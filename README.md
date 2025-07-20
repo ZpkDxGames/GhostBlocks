@@ -1,7 +1,7 @@
 # GhostBlocks Plugin
 
 - A Minecraft plugin that creates ghost blocks - blocks that are visible but doesn't have a hitbox.
-- **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed no hitbox, allowing players to walk through them.
+- **Build errors**: Ensure you have Java 17+ and Maven 3.6+ installed
 
 ## Features
 
