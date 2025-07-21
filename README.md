@@ -35,6 +35,8 @@
 | `/ghostblocks` | Open the ghost blocks GUI | `ghostblocks.use` |
 | `/ghostblocks help` | Show help information | `ghostblocks.use` |
 | `/ghostblocks count` | Show number of ghost blocks | `ghostblocks.use` |
+| `/ghostblocks manage` | Open the ghost block management GUI | `ghostblocks.use` |
+| `/ghostblocks remover` | Get the ghost block remover tool | `ghostblocks.use` |
 | `/ghostblocks reload` | Reload the plugin | `ghostblocks.admin` |
 | `/ghostblocks cleanup` | Clean up invalid ghost blocks | `ghostblocks.admin` |
 
