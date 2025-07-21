@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class GhostBlocksCommand implements CommandExecutor {
     private final GhostBlocksPlugin plugin;
@@ -39,14 +40,22 @@ public class GhostBlocksCommand implements CommandExecutor {
                 case "help":
                     sendHelp(player);
                     return true;
+                case "manage":
+                    plugin.getGUIManager().openManagementGUI(player);
+                    return true;
+                case "remover":
+                    ItemStack remover = plugin.getGUIManager().createGhostBlockRemover();
+                    player.getInventory().addItem(remover);
+                    player.sendMessage(ChatColor.GREEN + "You received a Ghost Block Remover!");
+                    return true;
                 case "reload":
                     if (!player.hasPermission("ghostblocks.admin")) {
                         player.sendMessage(ChatColor.RED + "You don't have permission to reload the plugin!");
                         return true;
                     }
-                    plugin.getGhostBlockManager().saveGhostBlocks();
-                    plugin.getGhostBlockManager().loadGhostBlocks();
-                    player.sendMessage(ChatColor.GREEN + "GhostBlocks plugin reloaded!");
+                    player.sendMessage(ChatColor.YELLOW + "Reloading GhostBlocks plugin...");
+                    plugin.getGhostBlockManager().reload();
+                    player.sendMessage(ChatColor.GREEN + "GhostBlocks plugin reloaded successfully!");
                     return true;
                 case "cleanup":
                     if (!player.hasPermission("ghostblocks.admin")) {
@@ -71,7 +80,9 @@ public class GhostBlocksCommand implements CommandExecutor {
 
     private void sendHelp(Player player) {
         player.sendMessage(ChatColor.GOLD + "=== GhostBlocks Help ===");
-        player.sendMessage(ChatColor.YELLOW + "/ghostblocks" + ChatColor.WHITE + " - Open the ghost blocks GUI");
+        player.sendMessage(ChatColor.YELLOW + "/ghostblocks" + ChatColor.WHITE + " - Open the ghost blocks main menu");
+        player.sendMessage(ChatColor.YELLOW + "/ghostblocks manage" + ChatColor.WHITE + " - Manage existing ghost blocks");
+        player.sendMessage(ChatColor.YELLOW + "/ghostblocks remover" + ChatColor.WHITE + " - Get a ghost block remover tool");
         player.sendMessage(ChatColor.YELLOW + "/ghostblocks help" + ChatColor.WHITE + " - Show this help message");
         player.sendMessage(ChatColor.YELLOW + "/ghostblocks count" + ChatColor.WHITE + " - Show the number of ghost blocks");
         
