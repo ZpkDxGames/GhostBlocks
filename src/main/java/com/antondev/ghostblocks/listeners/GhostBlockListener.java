@@ -1,16 +1,18 @@
 package com.antondev.ghostblocks.listeners;
 
 import com.antondev.ghostblocks.GhostBlocksPlugin;
-import com.antondev.ghostblocks.data.GhostBlock;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -52,7 +54,7 @@ public class GhostBlockListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         String title = event.getView().getTitle();
 
-        // Check if it's our GUI
+        // Check if it's any of our GUIs
         if (!plugin.getGUIManager().isGhostBlockGUI(title)) {
             return;
         }
@@ -60,128 +62,291 @@ public class GhostBlockListener implements Listener {
         event.setCancelled(true);
 
         ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+        if (clickedItem == null) {
             return;
         }
 
-        // Check if it's the remover tool
-        if (plugin.getGUIManager().isGhostBlockRemover(clickedItem)) {
-            player.getInventory().addItem(clickedItem.clone());
-            player.sendMessage(ChatColor.GREEN + "You received the Ghost Block Remover!");
-            player.closeInventory();
+        // Handle Return button FIRST (before any GUI-specific handling)
+        if (plugin.getGUIManager().isReturnButton(clickedItem)) {
+            plugin.getGUIManager().handleReturnButton(player);
             return;
         }
 
-        // Check if it's a category button
-        if (plugin.getGUIManager().isCategoryButton(clickedItem)) {
-            String category = plugin.getGUIManager().getCategoryFromButton(clickedItem);
-            if (category != null) {
-                plugin.getGUIManager().openCategoryGUI(player, category, 0);
+        // Handle Main Menu clicks
+        if (title.contains("Main Menu")) {
+            if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
+                String displayName = clickedItem.getItemMeta().getDisplayName();
+                if (displayName.contains("Create Ghost Blocks")) {
+                    plugin.getGUIManager().openMainGUI(player);
+                    return;
+                } else if (displayName.contains("Manage Ghost Blocks")) {
+                    plugin.getGUIManager().openManagementGUI(player);
+                    return;
+                } else if (displayName.contains("Ghost Block Remover")) {
+                    ItemStack remover = plugin.getGUIManager().createGhostBlockRemover();
+                    player.getInventory().addItem(remover);
+                    player.closeInventory();
+                    player.sendMessage(ChatColor.GREEN + "You received the Ghost Block Remover!");
+                    return;
+                }
             }
             return;
         }
 
-        // Check if it's a navigation button
+        // Handle Management GUI clicks
+        if (title.contains("Manage Ghost Blocks")) {
+            if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
+                String displayName = clickedItem.getItemMeta().getDisplayName();
+                
+                if (displayName.contains("Previous Page")) {
+                    Integer currentPage = plugin.getGUIManager().getPlayerCurrentPage(player.getUniqueId());
+                    if (currentPage != null && currentPage > 0) {
+                        plugin.getGUIManager().openManagementGUI(player, currentPage - 1);
+                    }
+                    return;
+                } else if (displayName.contains("Next Page")) {
+                    Integer currentPage = plugin.getGUIManager().getPlayerCurrentPage(player.getUniqueId());
+                    if (currentPage != null) {
+                        plugin.getGUIManager().openManagementGUI(player, currentPage + 1);
+                    }
+                    return;
+                } else if (displayName.contains("Back to Main Menu")) {
+                    plugin.getGUIManager().openMainMenuGUI(player);
+                    return;
+                } else if (displayName.contains("Refresh")) {
+                    Integer currentPage = plugin.getGUIManager().getPlayerCurrentPage(player.getUniqueId());
+                    plugin.getGUIManager().openManagementGUI(player, currentPage != null ? currentPage : 0);
+                    return;
+                }
+                
+                // Handle ghost block management - clicking on actual ghost blocks
+                if (clickedItem.getType() != Material.ARROW && clickedItem.getType() != Material.BARRIER && 
+                    clickedItem.getType() != Material.EMERALD && clickedItem.getType() != Material.GRAY_STAINED_GLASS_PANE) {
+                    
+                    // Parse location from lore to find the ghost block
+                    if (clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasLore()) {
+                        List<String> lore = clickedItem.getItemMeta().getLore();
+                        String locationCoords = null;
+                        String worldName = null;
+                        
+                        // Extract both location and world from lore
+                        for (String line : lore) {
+                            String cleanLine = org.bukkit.ChatColor.stripColor(line);
+                            if (cleanLine.contains("Location:")) {
+                                locationCoords = cleanLine.replace("Location:", "").trim();
+                            } else if (cleanLine.contains("World:")) {
+                                worldName = cleanLine.replace("World:", "").trim();
+                            }
+                        }
+                        
+                        if (locationCoords != null) {
+                            try {
+                                String[] parts = locationCoords.split(",");
+                                
+                                if (parts.length >= 3) {
+                                    int x = Integer.parseInt(parts[0].trim());
+                                    int y = Integer.parseInt(parts[1].trim());
+                                    int z = Integer.parseInt(parts[2].trim());
+                                    
+                                    // Use the world from lore if available, otherwise use player's current world
+                                    org.bukkit.World targetWorld = player.getWorld();
+                                    if (worldName != null && !worldName.isEmpty()) {
+                                        org.bukkit.World foundWorld = org.bukkit.Bukkit.getWorld(worldName);
+                                        if (foundWorld != null) {
+                                            targetWorld = foundWorld;
+                                        }
+                                    }
+                                    
+                                    Location loc = new Location(targetWorld, x, y, z);
+                                    
+                                    if (event.isLeftClick()) {
+                                        // Teleport to ghost block
+                                        Location teleportLoc = loc.clone().add(0.5, 1, 0.5);
+                                        player.teleport(teleportLoc);
+                                        player.sendMessage(ChatColor.GREEN + "Teleported to ghost block at " + 
+                                            x + ", " + y + ", " + z + " in " + targetWorld.getName() + "!");
+                                        player.closeInventory();
+                                    } else if (event.isRightClick()) {
+                                        // Remove ghost block
+                                        if (plugin.getGhostBlockManager().removeGhostBlockAt(loc)) {
+                                            player.sendMessage(ChatColor.RED + "Ghost block removed at " + 
+                                                x + ", " + y + ", " + z + " in " + targetWorld.getName() + "!");
+                                            // Refresh the GUI
+                                            Integer currentPage = plugin.getGUIManager().getPlayerCurrentPage(player.getUniqueId());
+                                            plugin.getGUIManager().openManagementGUI(player, currentPage != null ? currentPage : 0);
+                                        } else {
+                                            player.sendMessage(ChatColor.YELLOW + "No ghost block found at that location!");
+                                        }
+                                    }
+                                } else {
+                                    player.sendMessage(ChatColor.RED + "Invalid location format in lore!");
+                                }
+                            } catch (NumberFormatException e) {
+                                player.sendMessage(ChatColor.RED + "Could not parse ghost block coordinates: " + e.getMessage());
+                            } catch (Exception e) {
+                                player.sendMessage(ChatColor.RED + "Could not process ghost block location: " + e.getMessage());
+                                plugin.getLogger().warning("Error processing ghost block location: " + e.getMessage() + " | Coords: " + locationCoords);
+                            }
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Ghost block item has no location information!");
+                        }
+                    } else {
+                        player.sendMessage(ChatColor.RED + "Ghost block item has no lore information!");
+                    }
+                }
+            }
+            return;
+        }
+
+        // Handle Ghost Block Remover
+        if (plugin.getGUIManager().isGhostBlockRemover(clickedItem)) {
+            ItemStack remover = plugin.getGUIManager().createGhostBlockRemover();
+            player.getInventory().addItem(remover);
+            player.closeInventory();
+            player.sendMessage(ChatColor.GREEN + "You received the Ghost Block Remover!");
+            return;
+        }
+
+        // Handle Category buttons
+        if (plugin.getGUIManager().isCategoryButton(clickedItem)) {
+            String category = plugin.getGUIManager().getCategoryFromButton(clickedItem);
+            if (category != null) {
+                plugin.getGUIManager().openCategoryGUI(player, category);
+            }
+            return;
+        }
+
+        // Handle Navigation buttons
         if (plugin.getGUIManager().isNavigationButton(clickedItem)) {
             plugin.getGUIManager().handleNavigation(player, clickedItem);
             return;
         }
 
-        // Check if it's a valid block material from any category
-        boolean isValidBlock = false;
-        for (List<Material> categoryBlocks : plugin.getGUIManager().getCategories().values()) {
-            if (categoryBlocks.contains(clickedItem.getType())) {
-                isValidBlock = true;
-                break;
-            }
+        // Handle Back button
+        if (plugin.getGUIManager().isBackButton(clickedItem.getType())) {
+            plugin.getGUIManager().openMainGUI(player);
+            return;
         }
 
-        if (isValidBlock) {
-            ItemStack ghostBlockItem = plugin.getGUIManager().createGhostBlockItem(clickedItem.getType());
+        // Handle Ghost Block items
+        if (plugin.getGUIManager().isGhostBlockItem(clickedItem)) {
+            Material material = clickedItem.getType();
+            
+            // Add to selected blocks for ghost placement
+            plugin.getGUIManager().addSelectedBlock(player, material);
+            
+            // Give them the special ghost block item
+            ItemStack ghostBlockItem = plugin.getGUIManager().createGhostBlockItem(material);
             player.getInventory().addItem(ghostBlockItem);
-            player.sendMessage(ChatColor.GREEN + "You received a Ghost " + 
-                formatMaterialName(clickedItem.getType()) + "!");
-            player.closeInventory();
+            
+            // Keep GUI open and provide feedback
+            player.sendMessage(ChatColor.GREEN + "Added " + material.name().toLowerCase().replace('_', ' ') + " ghost block to your inventory!");
+            player.sendMessage(ChatColor.GREEN + "You received a Ghost " +
+                    formatMaterialName(material) + "! Place it to create a ghost block.");
         }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        ItemStack item = event.getItemInHand();
-
+        ItemStack itemInHand = event.getItemInHand();
+        
         // Check if it's a ghost block item
-        if (!plugin.getGUIManager().isGhostBlockItem(item)) {
+        if (plugin.getGUIManager().isGhostBlockItem(itemInHand)) {
+            event.setCancelled(true);
+            
+            // Get the material from the item type
+            Material ghostMaterial = itemInHand.getType();
+            
+            // Get the target location - this follows Minecraft's grid system
+            Location targetLocation = event.getBlock().getLocation();
+            
+            // Check if there's already a ghost block at this location
+            if (plugin.getGhostBlockManager().isGhostBlockAt(targetLocation)) {
+                player.sendMessage(ChatColor.YELLOW + "There's already a ghost block at this location!");
+                return;
+            }
+            
+            // Create the ghost block with the same material as the item
+            plugin.getGhostBlockManager().createGhostBlock(targetLocation, ghostMaterial);
+            
+            // Remove one item from stack
+            if (itemInHand.getAmount() > 1) {
+                itemInHand.setAmount(itemInHand.getAmount() - 1);
+            } else {
+                player.getInventory().remove(itemInHand);
+            }
+            
+            player.sendMessage(ChatColor.GREEN + "Ghost block placed!");
             return;
         }
-
-        // Cancel the normal block placement
-        event.setCancelled(true);
-
-        // Get the block location
-        Location location = event.getBlockPlaced().getLocation();
         
-        // Add 0.5 to center the falling block in the block space
-        location.add(0.5, 0, 0.5);
-
-        // Create the ghost block
-        Material material = item.getType();
-        plugin.getGhostBlockManager().createGhostBlock(location, material);
-
-        // Remove one item from the player's hand
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(null);
-        }
-
-        player.sendMessage(ChatColor.GREEN + "Ghost block placed!");
+        // Note: Legacy support for selected materials has been removed to prevent 
+        // regular blocks from being accidentally converted to ghost blocks.
+        // Only items specifically created by the GUI should become ghost blocks.
     }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        ItemStack item = event.getItem();
+        ItemStack item = player.getInventory().getItemInMainHand();
 
-        // Check if it's the ghost block remover
-        if (!plugin.getGUIManager().isGhostBlockRemover(item)) {
-            return;
-        }
-
-        // Check if it's a right-click
-        if (event.getAction().toString().contains("RIGHT_CLICK")) {
-            // Try to find and remove ghost blocks in the area the player is looking at
-            boolean removed = false;
+        // Check if it's a stick (any stick, including the special remover) and right-click
+        if (item != null && item.getType() == Material.STICK && 
+            (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)) {
             
-            // Get all ghost blocks and check which one is closest to the player's line of sight
-            for (com.antondev.ghostblocks.data.GhostBlock ghostBlock : plugin.getGhostBlockManager().getAllGhostBlocks()) {
-                Location ghostLoc = ghostBlock.getLocation();
+            event.setCancelled(true);
+            
+            Location targetLocation = null;
+            boolean foundGhostBlock = false;
+            
+            if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+                // Right-clicked on a block - check that exact location first
+                targetLocation = event.getClickedBlock().getLocation();
                 
-                // Check if ghost block is within reasonable distance (10 blocks)
-                if (ghostLoc.getWorld().equals(player.getWorld()) && 
-                    ghostLoc.distance(player.getLocation()) <= 10) {
-                    
-                    // Check if the ghost block is roughly in the player's line of sight
-                    Location playerEye = player.getEyeLocation();
-                    org.bukkit.util.Vector direction = playerEye.getDirection();
-                    org.bukkit.util.Vector toGhost = ghostLoc.toVector().subtract(playerEye.toVector());
-                    
-                    // Check if the ghost block is in the general direction the player is looking
-                    if (direction.dot(toGhost.normalize()) > 0.8) { // 0.8 is roughly 36 degrees
-                        if (plugin.getGhostBlockManager().removeGhostBlockAt(ghostLoc)) {
-                            player.sendMessage(ChatColor.GREEN + "Ghost block removed!");
-                            removed = true;
-                            break;
-                        }
+                if (plugin.getGhostBlockManager().isGhostBlockAt(targetLocation)) {
+                    if (plugin.getGhostBlockManager().removeGhostBlockAt(targetLocation)) {
+                        player.sendMessage(ChatColor.GREEN + "Ghost block removed!");
+                        return;
                     }
                 }
             }
-
-            if (!removed) {
-                player.sendMessage(ChatColor.RED + "No ghost block found in that direction!");
+            
+            // Use ray tracing to find ghost blocks in line of sight
+            Location eyeLocation = player.getEyeLocation();
+            org.bukkit.util.Vector direction = eyeLocation.getDirection();
+            
+            // Check each block in line of sight up to 10 blocks away
+            for (double distance = 0.5; distance <= 10; distance += 0.5) {
+                Location checkLocation = eyeLocation.clone().add(direction.clone().multiply(distance));
+                Location blockLocation = checkLocation.getBlock().getLocation();
+                
+                if (plugin.getGhostBlockManager().isGhostBlockAt(blockLocation)) {
+                    if (plugin.getGhostBlockManager().removeGhostBlockAt(blockLocation)) {
+                        player.sendMessage(ChatColor.GREEN + "Ghost block removed!");
+                        foundGhostBlock = true;
+                        break;
+                    }
+                }
             }
+            
+            if (!foundGhostBlock) {
+                player.sendMessage(ChatColor.YELLOW + "No ghost block found in your line of sight!");
+            }
+        }
+    }
 
-            event.setCancelled(true);
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.getGUIManager().clearSelectedBlocks(event.getPlayer());
+        plugin.getGUIManager().cleanupPlayerData(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (plugin.getGUIManager().isGhostBlockGUI(event.getView().getTitle())) {
+            // Optional: Clear selected blocks when closing the GUI
+            // plugin.getGUIManager().clearSelectedBlocks((Player) event.getPlayer());
         }
     }
 }
