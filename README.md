@@ -202,9 +202,10 @@ This project is released under the MIT License. See the LICENSE file for details
 
 ### v6.0.0
 - GUI Enhancements
+- New Blocks added
+- RGB Color supported (Minimessage API)
 - Bugs fixed:
   - Glass Blocks unavailable
   - Corrumpted GhostBlocks vanishing randomly
   - Manager GUI couldn't remove blocks from the GUI itself
-- New Blocks added
-- RGB Color supported (Minimessage API)
+
