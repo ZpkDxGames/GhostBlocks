@@ -35,6 +35,8 @@
 | `/ghostblocks` | Open the ghost blocks GUI | `ghostblocks.use` |
 | `/ghostblocks help` | Show help information | `ghostblocks.use` |
 | `/ghostblocks count` | Show number of ghost blocks | `ghostblocks.use` |
+| `/ghostblocks manage` | Open the ghost block management GUI | `ghostblocks.use` |
+| `/ghostblocks remover` | Get the ghost block remover tool | `ghostblocks.use` |
 | `/ghostblocks reload` | Reload the plugin | `ghostblocks.admin` |
 | `/ghostblocks cleanup` | Clean up invalid ghost blocks | `ghostblocks.admin` |
 
@@ -118,7 +120,7 @@
 ### Requirements
 - Java 17 or higher
 - Maven 3.6+
-- Paper 1.20.4 API
+- Paper 1.20.6 API or higher
 
 ### Build Steps
 ```bash
@@ -169,3 +171,31 @@ This project is released under the MIT License. See the LICENSE file for details
 - Auto-save system
 - Admin commands
 - 200+ block types across all categories
+
+### v2.0.0
+- **GUI Enhancement**: GUI now stays open when selecting blocks for improved user experience
+- Players can now select multiple blocks without reopening the GUI
+- Other GUI interactions (remover tool, navigation) work as before
+
+### v3.0.0
+- **Logic Fix**: Ghostblocks no longer glitches or decay over time.
+- **New Auto-Save system**: now, every 10ticks (0.5s) the plugin automatically saves all ghostblocks data into a dedicated file inside the plugin folder.
+- **Block decay resolved**: over time, some blocks vanished for nothing, now it's fixed.
+
+### v3.5.0
+- GUI management for existed ghostblocks.
+- New GUI Improvement.
+- New Commands in-game.
+- Thread-safe data structures.
+- New (APDC) System | Auto Player Data Cleanup.
+
+### v4.0.0
+- TPS Optimization.
+- Multi-Thread System.
+- New Blocks addition.
+
+### v5.0.0
+- TPS Optimization
+- Async Saving
+- Tiny adjusments | GUI
+- New Blocks added
